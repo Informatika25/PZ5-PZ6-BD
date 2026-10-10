@@ -1,0 +1,76 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html data-bs-theme-base="slate" lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Учебная система{% endblock %}</title>
+
+    <!-- Подключаем стили tabler -->
+    <link rel="stylesheet" href="{% static 'vendor/tabler/css/tabler.css' %}">
+
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+
+        <a class="navbar-brand" href="/profile/">
+            DjangoApp
+        </a>
+
+        <div class="navbar-nav me-auto">
+
+            <a class="nav-link" href="/departments/">
+                Факультеты
+            </a>
+
+            <a class="nav-link" href="/groups/">
+                Группы
+            </a>
+
+            <a class="nav-link" href="/courses/">
+                Курсы
+            </a>
+
+            <a class="nav-link" href="/profile/">
+                Профиль
+            </a>
+
+            <a class="nav-link" href="/dashboard/">
+                Дашборды
+            </a>
+
+        </div>
+
+        {% if user.is_authenticated %}
+            <span class="navbar-text me-3">
+                {{ user.username }}
+            </span>
+
+            <form method="post" action="/accounts/logout/">
+                {% csrf_token %}
+
+                <button class="btn btn-outline-light btn-sm"
+                        type="submit">
+                    Выйти
+                </button>
+            </form>
+        {% endif %}
+
+    </div>
+</nav>
+
+<div class="container page-container">
+
+    {% block content %}
+    {% endblock %}
+
+</div>
+
+
+<script src="{% static 'vendor/tabler/js/tabler.ts' %}"></script>
+</body>
+</html>

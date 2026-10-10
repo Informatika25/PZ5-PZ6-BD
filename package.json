@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@tabler/core": "^1.6.1",
+    "apexcharts": "^8.0.0"
+  }
+}

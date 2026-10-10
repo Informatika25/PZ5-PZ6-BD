@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Аналитические дашборды{% endblock %}
+
+{% block content %}
+<div class="page-header d-print-none mb-4">
+    <div class="row align-items-center">
+        <div class="col">
+            <h2 class="page-title">Дашборды аналитики проекта</h2>
+            <div class="text-muted mt-1">Визуализация реальных данных из базы данных системы.</div>
+        </div>
+    </div>
+</div>
+
+<!-- дашборд 1: общая статистика -->
+<h3 class="mb-3">1. Общая статистика системы</h3>
+<div class="row row-cards mb-4">
+    <div class="col-sm-6 col-lg-3">
+        {% include 'components/stat_card.html' with title="Факультеты" value=total_departments icon="🏛️" %}
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        {% include 'components/stat_card.html' with title="Курсы" value=total_courses icon="📚" %}
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        {% include 'components/stat_card.html' with title="Учебные группы" value=total_groups icon="👥" %}
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        {% include 'components/stat_card.html' with title="Студенты" value=total_students icon="🎓" %}
+    </div>
+</div>
+
+<!-- дашборд 2: учебная структура -->
+<h3 class="mb-3">2. Учебная структура по факультетам</h3>
+<div class="row row-cards mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">Количество курсов на факультетах</h3>
+                <div id="courses-bar-chart"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- дашборд 3: студенты и распределение -->
+<h3 class="mb-3">3. Анализ студентов и заполненности профилей</h3>
+<div class="row row-cards mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">Студенты по факультетам</h3>
+                <div id="students-column-chart"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">Наличие группы у студентов</h3>
+                <div id="students-donut-chart"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Подключаем локальный скрипт ApexCharts -->
+<script src="{% static 'vendor/apexcharts/apexcharts.min.js' %}"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // График 1: Курсы по факультетам
+        var coursesOptions = {
+            chart: { type: 'bar', height: 250, toolbar: { show: false } },
+            series: [{ name: 'Курсы', data: {{ courses_counts|safe }} }],
+            xaxis: { categories: {{ dept_names|safe }} },
+            colors: ['#206bc4']
+        };
+        new ApexCharts(document.querySelector("#courses-bar-chart"), coursesOptions).render();
+
+        // График 2: Студенты по факультетам
+        var studentsOptions = {
+            chart: { type: 'bar', height: 250, toolbar: { show: false } },
+            series: [{ name: 'Студенты', data: {{ students_counts|safe }} }],
+            xaxis: { categories: {{ dept_names|safe }} },
+            colors: ['#5eba00']
+        };
+        new ApexCharts(document.querySelector("#students-column-chart"), studentsOptions).render();
+
+        // График 3: Кольцевая диаграмма (Donut Chart)
+        var donutOptions = {
+            chart: { type: 'donut', height: 250 },
+            series: [{ students_with_group },{ students_without_group }],
+            labels: ['С группой', 'Без группы'],
+            colors: ['#206bc4', '#cd201f']
+        };
+        new ApexCharts(document.querySelector("#students-donut-chart"), donutOptions).render();
+    });
+</script>
+{% endblock %}
