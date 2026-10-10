@@ -368,43 +368,77 @@ def course_delete(
         }
     )
 #Добавляем дашборды
+
+# Дашборды аналитики
 @login_required
 def dashboard_view(request):
-    # Общие показатели
+    # Общие показатели из базы данных
     total_departments = Department.objects.count()
     total_courses = Course.objects.count()
     total_groups = AcademicGroup.objects.count()
     total_students = StudentProfile.objects.count()
 
+    # Считаем данные отдельно для каждого факультета
     departments_stats = Department.objects.annotate(
         courses_count=Count('courses', distinct=True),
         groups_count=Count('groups', distinct=True),
-        students_count=Count('students', distinct=True)
+        students_count=Count('students', distinct=True),
+    ).order_by('name')
+
+    # Подготавливаем данные для графиков
+    dept_names = []
+    courses_counts = []
+    groups_counts = []
+    students_counts = []
+
+    for department in departments_stats:
+        dept_names.append(department.name)
+        courses_counts.append(department.courses_count)
+        groups_counts.append(department.groups_count)
+        students_counts.append(department.students_count)
+
+    # Студенты с назначенной учебной группой и без неё
+    students_with_group = StudentProfile.objects.filter(
+        academic_group__isnull=False
+    ).count()
+
+    students_without_group = StudentProfile.objects.filter(
+        academic_group__isnull=True
+    ).count()
+
+    # Количество записей студентов на курсы (это именно связи студент-курс, а не число уникальных курсов)
+    total_enrollments = sum(
+        student.courses.count()
+        for student in StudentProfile.objects.prefetch_related('courses')
     )
 
-    dept_names = [d.name for d in departments_stats]
-    courses_counts = [d.courses_count for d in departments_stats]
-    students_counts = [d.students_count for d in departments_stats]
+    # Количество студентов в каждой учебной группе
+    groups_stats = AcademicGroup.objects.annotate(
+        students_count=Count('students', distinct=True)
+    ).order_by('name')
 
-    # Подсчет студентов с группой и без
-    try:
-        students_with_group = StudentProfile.objects.filter(group__isnull=False).count()
-        students_without_group = StudentProfile.objects.filter(group__isnull=True).count()
-    except Exception:
-        students_with_group = 0
-        students_without_group = total_students
+    group_names = [group.name for group in groups_stats]
+    group_students_counts = [
+        group.students_count for group in groups_stats
+    ]
 
     context = {
         'total_departments': total_departments,
         'total_courses': total_courses,
         'total_groups': total_groups,
         'total_students': total_students,
+        'total_enrollments': total_enrollments,
 
         'dept_names': dept_names,
         'courses_counts': courses_counts,
+        'groups_counts': groups_counts,
         'students_counts': students_counts,
+
         'students_with_group': students_with_group,
         'students_without_group': students_without_group,
+
+        'group_names': group_names,
+        'group_students_counts': group_students_counts,
     }
 
     return render(request, 'dashboard.html', context)

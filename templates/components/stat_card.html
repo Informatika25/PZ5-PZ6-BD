@@ -1,26 +1,51 @@
-<div class="card">
+{% load tabler_icons %}
+
+<div class="card h-100 dashboard-stat-card">
     <div class="card-body">
-        <div class="row align-items-center">
-            <div class="col-auto">
-                <span class="bg-primary text-white avatar">
+        <div class="d-flex align-items-center">
+
+            <span class="avatar avatar-lg me-3 {{ color|default:'bg-primary-lt' }}">
+
+                {% if icon %}
+                    {% tabler_icon icon %}
+                {% else %}
                     <svg xmlns="http://www.w3.org/2000/svg"
-                         width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chart-bar">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                            <path d="M3 13a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -6" />
-                            <path d="M15 9a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -10" />
-                            <path d="M9 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -14" />
-                            <path d="M4 20h14" />
+                         width="24" height="24"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         class="icon icon-tabler icon-tabler-chart-bar">
+
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M3 13a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -6" />
+                        <path d="M15 9a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -10" />
+                        <path d="M9 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -14" />
+                        <path d="M4 20h14" />
+
                     </svg>
-                </span>
-            </div>
-            <div class="col">
-                <div class="font-weight-medium text-muted">
+                {% endif %}
+
+            </span>
+
+            <div class="flex-fill">
+                <div class="text-secondary">
                     {{ title }}
                 </div>
-                <div class="h2 mb-0">
+
+                <div class="h1 mb-0">
                     {{ value }}
                 </div>
+
+                {% if subtitle %}
+                    <div class="text-secondary small mt-1">
+                        {{ subtitle }}
+                    </div>
+                {% endif %}
             </div>
+
         </div>
     </div>
 </div>

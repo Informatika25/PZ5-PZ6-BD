@@ -1,3 +1,4 @@
+
 {% extends 'base.html' %}
 {% load static %}
 
@@ -8,30 +9,38 @@
     <div class="row align-items-center">
         <div class="col">
             <h2 class="page-title">Дашборды аналитики проекта</h2>
-            <div class="text-muted mt-1">Визуализация реальных данных из базы данных системы.</div>
+            <div class="text-muted mt-1">
+                Визуализация реальных данных из базы данных системы.
+            </div>
         </div>
     </div>
 </div>
 
-<!-- дашборд 1: общая статистика -->
+<!-- Дашборд 1: общая статистика -->
 <h3 class="mb-3">1. Общая статистика системы</h3>
+
 <div class="row row-cards mb-4">
     <div class="col-sm-6 col-lg-3">
-        {% include 'components/stat_card.html' with title="Факультеты" value=total_departments icon="🏛️" %}
+        {% include 'components/stat_card.html' with title="Факультеты" value=total_departments icon="faculties" color="bg-blue-lt" %}
     </div>
+
     <div class="col-sm-6 col-lg-3">
-        {% include 'components/stat_card.html' with title="Курсы" value=total_courses icon="📚" %}
+        {% include 'components/stat_card.html' with title="Курсы" value=total_courses icon="courses" color="bg-green-lt" %}
     </div>
+
     <div class="col-sm-6 col-lg-3">
-        {% include 'components/stat_card.html' with title="Учебные группы" value=total_groups icon="👥" %}
+        {% include 'components/stat_card.html' with title="Учебные группы" value=total_groups icon="groups" color="bg-purple-lt" %}
     </div>
+
     <div class="col-sm-6 col-lg-3">
-        {% include 'components/stat_card.html' with title="Студенты" value=total_students icon="🎓" %}
+        {% include 'components/stat_card.html' with title="Студенты" value=total_students icon="students" color="bg-orange-lt" %}
     </div>
 </div>
 
-<!-- дашборд 2: учебная структура -->
+
+<!-- Дашборд 2: учебная структура -->
 <h3 class="mb-3">2. Учебная структура по факультетам</h3>
+
 <div class="row row-cards mb-4">
     <div class="col-12">
         <div class="card">
@@ -43,19 +52,22 @@
     </div>
 </div>
 
-<!-- дашборд 3: студенты и распределение -->
+
+<!-- Дашборд 3: студенты и распределение -->
 <h3 class="mb-3">3. Анализ студентов и заполненности профилей</h3>
+
 <div class="row row-cards mb-4">
     <div class="col-md-6">
-        <div class="card">
+        <div class="card h-100">
             <div class="card-body">
                 <h3 class="card-title">Студенты по факультетам</h3>
                 <div id="students-column-chart"></div>
             </div>
         </div>
     </div>
+
     <div class="col-md-6">
-        <div class="card">
+        <div class="card h-100">
             <div class="card-body">
                 <h3 class="card-title">Наличие группы у студентов</h3>
                 <div id="students-donut-chart"></div>
@@ -64,36 +76,124 @@
     </div>
 </div>
 
-<!-- Подключаем локальный скрипт ApexCharts -->
+
+<!-- Передаем данные из Django в JavaScript -->
+{{ dept_names|json_script:"department-names" }}
+{{ courses_counts|json_script:"courses-counts" }}
+{{ students_counts|json_script:"students-counts" }}
+{{ students_with_group|json_script:"students-with-group" }}
+{{ students_without_group|json_script:"students-without-group" }}
+
+
+<!-- Подключаем локальную библиотеку ApexCharts -->
 <script src="{% static 'vendor/apexcharts/apexcharts.min.js' %}"></script>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        // График 1: Курсы по факультетам
+
+        // Получаем данные, которые Django передал в HTML
+        const deptNames = JSON.parse(
+            document.getElementById("department-names").textContent
+        );
+
+        const coursesCounts = JSON.parse(
+            document.getElementById("courses-counts").textContent
+        );
+
+        const studentsCounts = JSON.parse(
+            document.getElementById("students-counts").textContent
+        );
+
+        const studentsWithGroup = JSON.parse(
+            document.getElementById("students-with-group").textContent
+        );
+
+        const studentsWithoutGroup = JSON.parse(
+            document.getElementById("students-without-group").textContent
+        );
+
+
+        // График 1: количество курсов по факультетам
         var coursesOptions = {
-            chart: { type: 'bar', height: 250, toolbar: { show: false } },
-            series: [{ name: 'Курсы', data: {{ courses_counts|safe }} }],
-            xaxis: { categories: {{ dept_names|safe }} },
-            colors: ['#206bc4']
+            chart: {
+                type: 'bar',
+                height: 250,
+                toolbar: { show: false }
+            },
+            series: [{
+                name: 'Курсы',
+                data: coursesCounts
+            }],
+            xaxis: {
+                categories: deptNames
+            },
+            colors: ['#206bc4'],
+            noData: {
+                text: 'Пока нет данных'
+            }
         };
-        new ApexCharts(document.querySelector("#courses-bar-chart"), coursesOptions).render();
 
-        // График 2: Студенты по факультетам
+        new ApexCharts(
+            document.querySelector("#courses-bar-chart"),
+            coursesOptions
+        ).render();
+
+
+        // График 2: количество студентов по факультетам
         var studentsOptions = {
-            chart: { type: 'bar', height: 250, toolbar: { show: false } },
-            series: [{ name: 'Студенты', data: {{ students_counts|safe }} }],
-            xaxis: { categories: {{ dept_names|safe }} },
-            colors: ['#5eba00']
+            chart: {
+                type: 'bar',
+                height: 250,
+                toolbar: { show: false }
+            },
+            series: [{
+                name: 'Студенты',
+                data: studentsCounts
+            }],
+            xaxis: {
+                categories: deptNames
+            },
+            colors: ['#5eba00'],
+            noData: {
+                text: 'Пока нет данных'
+            }
         };
-        new ApexCharts(document.querySelector("#students-column-chart"), studentsOptions).render();
 
-        // График 3: Кольцевая диаграмма (Donut Chart)
+        new ApexCharts(
+            document.querySelector("#students-column-chart"),
+            studentsOptions
+        ).render();
+
+
+        // График 3: наличие учебной группы у студентов
         var donutOptions = {
-            chart: { type: 'donut', height: 250 },
-            series: [{ students_with_group },{ students_without_group }],
-            labels: ['С группой', 'Без группы'],
-            colors: ['#206bc4', '#cd201f']
+            chart: {
+                type: 'donut',
+                height: 250
+            },
+            series: [
+                studentsWithGroup,
+                studentsWithoutGroup
+            ],
+            labels: [
+                'С группой',
+                'Без группы'
+            ],
+            colors: ['#e882ff', '#cd201f'],
+            legend: {
+                position: 'bottom'
+            },
+            noData: {
+                text: 'Пока нет данных'
+            }
         };
-        new ApexCharts(document.querySelector("#students-donut-chart"), donutOptions).render();
+
+        new ApexCharts(
+            document.querySelector("#students-donut-chart"),
+            donutOptions
+        ).render();
+
     });
 </script>
+
 {% endblock %}
