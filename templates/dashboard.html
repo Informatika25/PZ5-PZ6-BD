@@ -8,72 +8,156 @@
 <div class="page-header d-print-none mb-4">
     <div class="row align-items-center">
         <div class="col">
-            <h2 class="page-title">Дашборды аналитики проекта</h2>
+            <h2 class="page-title">Дашборды аналитики</h2>
             <div class="text-muted mt-1">
-                Визуализация реальных данных из базы данных системы.
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Дашборд 1: общая статистика -->
-<h3 class="mb-3">1. Общая статистика системы</h3>
-
-<div class="row row-cards mb-4">
-    <div class="col-sm-6 col-lg-3">
-        {% include 'components/stat_card.html' with title="Факультеты" value=total_departments icon="faculties" color="bg-blue-lt" %}
-    </div>
-
-    <div class="col-sm-6 col-lg-3">
-        {% include 'components/stat_card.html' with title="Курсы" value=total_courses icon="courses" color="bg-green-lt" %}
-    </div>
-
-    <div class="col-sm-6 col-lg-3">
-        {% include 'components/stat_card.html' with title="Учебные группы" value=total_groups icon="groups" color="bg-purple-lt" %}
-    </div>
-
-    <div class="col-sm-6 col-lg-3">
-        {% include 'components/stat_card.html' with title="Студенты" value=total_students icon="students" color="bg-orange-lt" %}
-    </div>
-</div>
-
-
-<!-- Дашборд 2: учебная структура -->
-<h3 class="mb-3">2. Учебная структура по факультетам</h3>
-
-<div class="row row-cards mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body">
-                <h3 class="card-title">Количество курсов на факультетах</h3>
-                <div id="courses-bar-chart"></div>
+                Визуализация реальных данных из бд системы.
             </div>
         </div>
     </div>
 </div>
 
 
-<!-- Дашборд 3: студенты и распределение -->
-<h3 class="mb-3">3. Анализ студентов и заполненности профилей</h3>
+<!-- Вкладки дашбордов -->
+<div class="card mb-4">
 
-<div class="row row-cards mb-4">
-    <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-body">
-                <h3 class="card-title">Студенты по факультетам</h3>
-                <div id="students-column-chart"></div>
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs"
+            data-bs-toggle="tabs">
+
+            <li class="nav-item">
+                <a href="#dashboard-overview"
+                   class="nav-link active"
+                   data-bs-toggle="tab">
+
+                    <!-- Иконка главной страницы -->
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         width="24" height="24"
+                         viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         class="icon me-2">
+                        <path d="M3 10l9 -7l9 7" />
+                        <path d="M5 9v11h14V9" />
+                        <path d="M9 20v-6h6v6" />
+                    </svg>
+
+                    Обзор системы
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="#dashboard-departments"
+                   class="nav-link"
+                   data-bs-toggle="tab">
+
+                    <!-- Иконка факультетов -->
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         width="24" height="24"
+                         viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         class="icon me-2">
+                        <path d="M3 21h18" />
+                        <path d="M5 21V7l8 -4v18" />
+                        <path d="M19 21V11l-6 -4" />
+                        <path d="M9 9v.01" />
+                        <path d="M9 12v.01" />
+                        <path d="M9 15v.01" />
+                    </svg>
+
+                    Факультеты
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="#dashboard-students"
+                   class="nav-link"
+                   data-bs-toggle="tab">
+
+                    <!-- Иконка студентов -->
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         width="24" height="24"
+                         viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         class="icon me-2">
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M3 21v-2a6 6 0 0 1 12 0v2" />
+                        <path d="M16 3.5a4 4 0 0 1 0 7.5" />
+                        <path d="M19 14a6 6 0 0 1 2 5v2" />
+                    </svg>
+
+                    Студенты и курсы
+                </a>
+            </li>
+
+        </ul>
+    </div>
+
+    <!-- Здесь будут отображаться выбранные дашборды -->
+    <div class="card-body">
+        <div class="tab-content">
+
+            <div class="tab-pane active show" id="dashboard-overview">
+                <!-- Карточки с общей статистикой -->
+                <h3 class="mb-3">Общая статистика системы</h3>
+
+                <div class="row row-cards mb-4">
+
+                    <div class="col-sm-6 col-lg-3">
+                        {% include 'components/stat_card.html' with title="Факультеты" value=total_departments icon="faculties" color="bg-blue-lt" %}
+                    </div>
+
+                    <div class="col-sm-6 col-lg-3">
+                        {% include 'components/stat_card.html' with title="Курсы" value=total_courses icon="courses" color="bg-green-lt" %}
+                    </div>
+
+                    <div class="col-sm-6 col-lg-3">
+                        {% include 'components/stat_card.html' with title="Учебные группы" value=total_groups icon="groups" color="bg-purple-lt" %}
+                    </div>
+
+                    <div class="col-sm-6 col-lg-3">
+                        {% include 'components/stat_card.html' with title="Студенты" value=total_students icon="students" color="bg-orange-lt" %}
+                    </div>
+                </div>
             </div>
+
+            <div class="tab-pane" id="dashboard-departments">
+            <!-- График количества курсов -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3 class="card-title">Количество курсов на факультетах</h3>
+                    <div id="courses-bar-chart"></div>
+                </div>
+            </div>
+
+            <!-- Анализ учебной структуры факультетов -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h3 class="card-title">Количество студентов по факультетам</h3>
+                        <div id="students-column-chart"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane" id="dashboard-students">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h3 class="card-title">Наличие группы у студентов</h3>
+                        <div id="students-donut-chart"></div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-body">
-                <h3 class="card-title">Наличие группы у студентов</h3>
-                <div id="students-donut-chart"></div>
-            </div>
-        </div>
-    </div>
 </div>
 
 
