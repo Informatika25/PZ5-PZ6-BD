@@ -367,29 +367,39 @@ def course_delete(
             'title': 'Удаление курса',
         }
     )
-#Добавляем дашборды
+
 
 # Дашборды аналитики
 @login_required
 def dashboard_view(request):
-    # Общие показатели из базы данных
-    total_departments = Department.objects.count()
-    total_courses = Course.objects.count()
-    total_groups = AcademicGroup.objects.count()
-    total_students = StudentProfile.objects.count()
+    departments = Department.objects.all().order_by('name')
 
-    # Считаем данные отдельно для каждого факультета
+    selected_department_id = request.GET.get('department')
+
+# Создаём запрос для получения статистики по факультетам
     departments_stats = Department.objects.annotate(
         courses_count=Count('courses', distinct=True),
         groups_count=Count('groups', distinct=True),
         students_count=Count('students', distinct=True),
     ).order_by('name')
 
-    # Подготавливаем данные для графиков
+    # Получаем название вкладки, которую нужно открыть
+    selected_tab = request.GET.get('tab', '')
+
+    # Если пользователь выбрал конкретный факультет,
+    # оставляем в статистике только его
+    if selected_department_id:
+        departments_stats = departments_stats.filter(
+            id=selected_department_id
+        )
+
     dept_names = []
     courses_counts = []
     groups_counts = []
     students_counts = []
+
+    # Здесь статистика для таблицы
+    departments_table = []
 
     for department in departments_stats:
         dept_names.append(department.name)
@@ -397,32 +407,128 @@ def dashboard_view(request):
         groups_counts.append(department.groups_count)
         students_counts.append(department.students_count)
 
-    # Студенты с назначенной учебной группой и без неё
-    students_with_group = StudentProfile.objects.filter(
-        academic_group__isnull=False
-    ).count()
+        # Добавляем показатели факультета в таблицу
+        departments_table.append({
+            'name': department.name,
+            'courses_count': department.courses_count,
+            'groups_count': department.groups_count,
+            'students_count': department.students_count,
+        })
 
-    students_without_group = StudentProfile.objects.filter(
-        academic_group__isnull=True
-    ).count()
+    # Находим факультет с наибольшим количеством студентов и курсов
+    if departments_stats.exists():
+        department_by_students = departments_stats.order_by(
+            '-students_count', 'name'
+        ).first()
 
-    # Количество записей студентов на курсы (это именно связи студент-курс, а не число уникальных курсов)
-    total_enrollments = sum(
-        student.courses.count()
-        for student in StudentProfile.objects.prefetch_related('courses')
+        department_by_courses = departments_stats.order_by(
+            '-courses_count', 'name'
+        ).first()
+
+        top_students_department = department_by_students.name
+        top_students_count = department_by_students.students_count
+
+        top_courses_department = department_by_courses.name
+        top_courses_count = department_by_courses.courses_count
+    else:
+        top_students_department = 'Нет данных'
+        top_students_count = 0
+
+        top_courses_department = 'Нет данных'
+        top_courses_count = 0
+
+
+    # Если выбран конкретный факультет,
+    # карточки показывают данные только по нему
+    if selected_department_id:
+        selected_department = departments_stats.first()
+
+        if selected_department:
+            total_departments = 1
+            total_courses = selected_department.courses_count
+            total_groups = selected_department.groups_count
+            total_students = selected_department.students_count
+        else:
+            total_departments = 0
+            total_courses = 0
+            total_groups = 0
+            total_students = 0
+    else:
+        # Если факультет не выбран, показываем общую статистику
+        total_departments = Department.objects.count()
+        total_courses = Course.objects.count()
+        total_groups = AcademicGroup.objects.count()
+        total_students = StudentProfile.objects.count()
+
+
+    # Получаем всех студентов
+    students = StudentProfile.objects.all()
+
+    # Считаем студентов с группой и без группы
+    if selected_department_id:
+        students_with_group = students.filter(
+            academic_group__department_id=selected_department_id
+        ).count()
+
+        students_without_group = 0
+    else:
+        students_with_group = students.filter(
+            academic_group__isnull=False
+        ).count()
+
+        students_without_group = students.filter(
+            academic_group__isnull=True
+        ).count()
+
+    # Считаем количество записей студентов на курсы
+    students_for_enrollments = StudentProfile.objects.prefetch_related(
+        'courses'
     )
 
-    # Количество студентов в каждой учебной группе
-    groups_stats = AcademicGroup.objects.annotate(
+    if selected_department_id:
+        students_for_enrollments = students_for_enrollments.filter(
+            academic_group__department_id=selected_department_id
+        )
+
+    total_enrollments = sum(
+        student.courses.count()
+        for student in students_for_enrollments
+    )
+
+    # Получаем количество студентов в каждой учебной группе
+    groups = AcademicGroup.objects.all()
+
+    if selected_department_id:
+        groups = groups.filter(
+            department_id=selected_department_id
+        )
+
+    groups_stats = groups.annotate(
         students_count=Count('students', distinct=True)
     ).order_by('name')
 
-    group_names = [group.name for group in groups_stats]
-    group_students_counts = [
-        group.students_count for group in groups_stats
-    ]
+    group_names = []
+    group_students_counts = []
 
+    for group in groups_stats:
+        group_names.append(group.name)
+        group_students_counts.append(group.students_count)
+
+
+    print('Всего студентов:', StudentProfile.objects.count())
+    print(
+        'Студентов без группы:',
+        StudentProfile.objects.filter(
+            academic_group__isnull=True
+        ).count()
+    )
+
+    # Передаём все данные
     context = {
+        'departments': departments,
+        'selected_department_id': selected_department_id,
+        'selected_tab': selected_tab,
+
         'total_departments': total_departments,
         'total_courses': total_courses,
         'total_groups': total_groups,
@@ -439,6 +545,13 @@ def dashboard_view(request):
 
         'group_names': group_names,
         'group_students_counts': group_students_counts,
+
+        'departments_table': departments_table,
+
+        'top_students_department': top_students_department,
+        'top_students_count': top_students_count,
+        'top_courses_department': top_courses_department,
+        'top_courses_count': top_courses_count,
     }
 
-    return render(request, 'dashboard.html', context)
+    return render(request,'dashboard.html', context)

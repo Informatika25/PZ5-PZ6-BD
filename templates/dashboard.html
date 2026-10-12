@@ -5,15 +5,8 @@
 {% block title %}Аналитические дашборды{% endblock %}
 
 {% block content %}
-<div class="page-header d-print-none mb-4">
-    <div class="row align-items-center">
-        <div class="col">
-            <h2 class="page-title">Дашборды аналитики</h2>
-            <div class="text-muted mt-1">
-                Визуализация реальных данных из бд системы.
-            </div>
-        </div>
-    </div>
+<div class="d-flex justify-content-between mb-3">
+    <h1>Дашборды</h1>
 </div>
 
 
@@ -26,7 +19,7 @@
 
             <li class="nav-item">
                 <a href="#dashboard-overview"
-                   class="nav-link active"
+                   class="nav-link {% if not selected_department_id %}active{% endif %}"
                    data-bs-toggle="tab">
 
                     <!-- Иконка главной страницы -->
@@ -49,7 +42,7 @@
 
             <li class="nav-item">
                 <a href="#dashboard-departments"
-                   class="nav-link"
+                   class="nav-link {% if selected_department_id %}active{% endif %}"
                    data-bs-toggle="tab">
 
                     <!-- Иконка факультетов -->
@@ -104,8 +97,7 @@
     <div class="card-body">
         <div class="tab-content">
 
-            <div class="tab-pane active show" id="dashboard-overview">
-                <!-- Карточки с общей статистикой -->
+            <div class="tab-pane {% if not selected_department_id and selected_tab != 'departments' %}active show{% endif %}" id="dashboard-overview">                <!-- Карточки с общей статистикой -->
                 <h3 class="mb-3">Общая статистика системы</h3>
 
                 <div class="row row-cards mb-4">
@@ -128,7 +120,49 @@
                 </div>
             </div>
 
-            <div class="tab-pane" id="dashboard-departments">
+            <div class="tab-pane {% if selected_department_id or selected_tab == 'departments' %}active show{% endif %}" id="dashboard-departments">                <!-- Фильтр по факультету -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3 class="card-title">Фильтр по факультету</h3>
+                    </div>
+
+                    <div class="card-body">
+                        <form method="get" action="{% url 'dashboard' %}">
+                            <div class="mb-3">
+                                <label class="form-label" for="department">
+                                    Выберите факультет
+                                </label>
+
+                                <select
+                                    class="form-select"
+                                    id="department"
+                                    name="department"
+                                >
+                                    <option value="">Все факультеты</option>
+
+                                    {% for department in departments %}
+                                        <option
+                                            value="{{ department.id }}"
+                                            {% if selected_department_id == department.id|stringformat:"s" %}selected{% endif %}
+                                        >
+                                            {{ department.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">
+                                Применить фильтр
+                            </button>
+
+
+                            <a href="{% url 'dashboard' %}?tab=departments" class="btn btn-outline-secondary">
+                                Сбросить
+                            </a>
+                        </form>
+                    </div>
+                </div>
+
             <!-- График количества курсов -->
             <div class="card mb-4">
                 <div class="card-body">
@@ -152,6 +186,66 @@
                         <h3 class="card-title">Наличие группы у студентов</h3>
                         <div id="students-donut-chart"></div>
                     </div>
+                </div>
+            <!-- Автоматические аналитические выводы -->
+                <div class="row row-cards mb-4">
+
+                    <!-- Факультет с наибольшим количеством студентов -->
+                    <div class="col-md-6 col-xl-4">
+                        <div class="card">
+                            <div class="card-status-top bg-primary"></div>
+                            <div class="card-body">
+                                <h3 class="card-title">Больше всего студентов</h3>
+
+                                <div class="h2 mb-2">
+                                    {{ top_students_department }}
+                                </div>
+
+                                <div class="text-secondary">
+                                    Количество студентов:
+                                    <strong>{{ top_students_count }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Факультет с наибольшим количеством курсов -->
+                    <div class="col-md-6 col-xl-4">
+                        <div class="card">
+                            <div class="card-status-top bg-success"></div>
+                            <div class="card-body">
+                                <h3 class="card-title">Больше всего курсов</h3>
+
+                                <div class="h2 mb-2">
+                                    {{ top_courses_department }}
+                                </div>
+
+                                <div class="text-secondary">
+                                    Количество курсов:
+                                    <strong>{{ top_courses_count }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Студенты без учебной группы -->
+                    <div class="col-md-6 col-xl-4">
+                        <div class="card">
+                            <div class="card-status-top bg-warning"></div>
+                            <div class="card-body">
+                                <h3 class="card-title">Студенты без группы</h3>
+
+                                <div class="h2 mb-2">
+                                    {{ students_without_group }}
+                                </div>
+
+                                <div class="text-secondary">
+                                    Количество студентов, которым ещё не назначена группа
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
